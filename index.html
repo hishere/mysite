@@ -2,14 +2,41 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
-    <script type="text/javascript" src="sites.js"></script>
+    <title>hishere</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.2.31/vue.global.prod.min.js" integrity="sha512-aHDp6BDlnbRLDTxmY5GIqQA0RQd6dmeKIDDDiEJlRrKNQPZbo2mjsR/DGMUzupcCpE4XgPyeIPnDQdJNUmeEhw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.25.0/axios.min.js" integrity="sha512-/Q6t3CASm04EliI1QyIDAA/nDo9R8FQ/BULoUFyN4n/BDdyIxeH7u++Z+eobdmr11gG5D/6nPFyDlnisDwhpYA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <meta name="viewport"
+          content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+
 </head>
 <body>
-<h1>hhh</h1>
-<script>
-    console.log(sites);
-     console.log(123);
-</script>
+    <div id="app">
+        <h1 align="center">is here?</h1><a href="https://github.com/hishere/mysite">源</a>
+        <span v-for="i in sites">
+            <h2 v-text="i.title"></h2>
+            <span v-for="j,jindex in i.sites">
+                <a :href="j.url" v-text="j.text"></a>
+                <span v-if="jindex<i.sites.length-1"> | </span>
+            </span>
+        </span>
+    </div>
+    <script>
+        const app = {
+            data() {
+                return {
+                    sites: []
+                }
+            },
+            methods: {
+
+            },
+            mounted() {
+                axios.get("data/site.json").then(res => {
+                    this.sites = res.data;
+                })
+            }
+        };
+        Vue.createApp(app).mount("#app")
+    </script>
 </body>
 </html>
