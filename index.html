@@ -2,43 +2,138 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>hishere</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.2.31/vue.global.prod.min.js" integrity="sha512-aHDp6BDlnbRLDTxmY5GIqQA0RQd6dmeKIDDDiEJlRrKNQPZbo2mjsR/DGMUzupcCpE4XgPyeIPnDQdJNUmeEhw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.25.0/axios.min.js" integrity="sha512-/Q6t3CASm04EliI1QyIDAA/nDo9R8FQ/BULoUFyN4n/BDdyIxeH7u++Z+eobdmr11gG5D/6nPFyDlnisDwhpYA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <meta name="viewport"
           content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
-
+    <title>Hishere</title>
+    <script src="data/site.js"></script>
+    <script src="js/vue.global.prod.min_3_23_1.js"></script>
+    <script src="js/axios.min_0_25_0.js"></script>
+    <link>
 </head>
-<body>
-    <div id="app">
-        <h1 align="center" style="color: #ff7700">is xvbnm?</h1><a href="https://github.com/hishere/mysite">源</a>
-        <span> | </span>
-        <a href="http://jsoneditoronline.org">JSON编辑器</a>
-        <span v-for="i in sites">
-            <h2 v-text="i.title"></h2>
-            <span v-for="j,jindex in i.sites">
-                <a :href="j.url" v-text="j.text"></a>
-                <span v-if="jindex<i.sites.length-1"> | </span>
-            </span>
-        </span>
-    </div>
-    <script>
-        const app = {
-            data() {
-                return {
-                    sites: []
-                }
-            },
-            methods: {
+<style>
+    a {
+        text-decoration: none;
+        line-height: 28px;
+    }
 
-            },
-            mounted() {
-                axios.get("data/site.json").then(res => {
-                    this.sites = res.data;
-                })
+    a:visited {
+        color: #ff0000;
+    }
+
+    #time {
+        position: absolute;
+        right: 8px;
+        top: 8px;
+    }
+
+    #hishere {
+        position: absolute;
+        left: 8px;
+        top: 8px;
+    }
+    textarea{
+        width: 50%;
+    }
+</style>
+<body>
+<div id="app">
+    <span id="hishere" v-text="'访问量:'+hishere"></span>
+    <span id="time" v-text="time"></span>
+    <h2 align="center" v-text="'Day'+hasDay"></h2>
+    <a :href="'https://github.com/hishere/mysite'+random">源仓库</a><span> | </span>
+    <a :href="'https://github.com/hishere/mysite/data/site.js'+random">源数据</a><span> | </span>
+    <a :href="'https://getman.cn'+random">接口测试</a><span> | </span>
+    <a :href="'https://getman.cn/mock'+random">模拟接口</a><span> | </span>
+    <span v-for="i in sites">
+        <h3 v-text="i.title"></h3>
+        <span v-for="j,jIndex in i.sites">
+            <a :href="j.url+random" v-text="j.text"></a>
+            <span v-if="jIndex<i.sites.length-1"> | </span>
+        </span>
+    </span>
+    <h3>不靠谱的记事本</h3>
+
+    <textarea :ref="ta1" v-model="ta1"></textarea><input type="submit" value="发送" @click="sendNotes()">
+    <span v-for="i in notes">
+        <hr>
+        <span style="white-space: pre;" v-text="i"></span>
+    </span>
+    <hr>
+</div>
+<script>
+    const app = {
+        data() {
+            return {
+                sites: sites(),
+                time: "00:00:00",
+                noonebutyou: 0,
+                ta1:"",
+                notes: []
             }
-        };
-        Vue.createApp(app).mount("#app")
-    </script>
+        },
+        mounted() {
+            const that = this;
+
+            axios.get("https://getman.cn/mock/his/here").then(res=>{
+                that.noonebutyou=res.data;
+                axios.post("https://getman.cn/api/mock?route=/his/here&body="+(res.data+1));
+            });
+
+            axios.get("https://getman.cn/mock/this/is/my/notes/for/mysite").then(res => {
+                that.notes=res.data;
+
+                //如果哪一天挂了,就找localStorage吧
+                localStorage.setItem("bukaopudejishiben",res.data)
+            });
+
+            setInterval(function () {
+                const date = new Date();
+                let h = date.getHours().toString();
+                if (h.length === 1) {
+                    h = "0" + h;
+                }
+                let m = date.getMinutes().toString();
+                if (m.length === 1) {
+                    m = "0" + m;
+                }
+                let s = date.getSeconds().toString();
+                if (s.length === 1) {
+                    s = "0" + s;
+                }
+                that.time = h + ":" + m + ":" + s
+            }, 2000)
+        },
+        methods: {
+            sendNotes() {
+                const that=this;
+                const ta1=this.ta1;
+                this.ta1="";
+                if (ta1!==""){
+                    this.notes.unshift(ta1);
+                    axios.get("https://getman.cn/mock/this/is/my/notes/for/mysite").then(res=>{
+                        let notes = res.data;
+                        notes.unshift(ta1);
+                        axios.post("https://getman.cn/api/mock?route=/this/is/my/notes/for/mysite", {
+                            body: notes
+                        })
+                    });
+
+                }
+            }
+        },
+        computed: {
+            hasDay() {
+                const currentYear = new Date().getFullYear().toString();
+                const hasTimestamp = new Date() - new Date(currentYear);
+                return Math.ceil(hasTimestamp / 86400000) + 1;
+            },
+            random() {
+                return "?random=" + Math.random();
+            }
+        }
+    };
+    Vue.createApp(app).mount("#app");
+</script>
+
 </body>
 </html>
