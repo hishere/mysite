@@ -8,12 +8,16 @@
     <script src="data/site.js"></script>
     <script src="js/vue.global.prod.min_3_23_1.js"></script>
     <script src="js/axios.min_0_25_0.js"></script>
-    <link>
+    <script src="js/qs.min_6_10_3.js"></script>
 </head>
 <style>
     a {
         text-decoration: none;
         line-height: 28px;
+    }
+
+    .span-block{
+        display: inline-block;
     }
 
     a:visited {
@@ -37,7 +41,7 @@
 </style>
 <body>
 <div id="app">
-    <span id="hishere" v-text="'访问量:'+hishere"></span>
+    <span id="hishere" v-text="'访问量:'+hishere+' 用户量:'+users"></span>
     <span id="time" v-text="time"></span>
     <h2 align="center" v-text="'Day'+hasDay"></h2>
     <a :href="'https://github.com/hishere/mysite'+random">源仓库</a><span> | </span>
@@ -46,9 +50,10 @@
     <a :href="'https://getman.cn/mock'+random">模拟接口</a><span> | </span>
     <span v-for="i in sites">
         <h3 v-text="i.title"></h3>
-        <span v-for="j,jIndex in i.sites">
+        <span class="span-block" v-for="j,jIndex in i.sites">
             <a :href="j.url+random" v-text="j.text"></a>
-            <span v-if="jIndex<i.sites.length-1"> | </span>
+            <span>&nbsp|&nbsp</span>
+            <!--<span v-if="jIndex<i.sites.length-1">&nbsp|&nbsp</span>-->
         </span>
     </span>
     <h3>不靠谱的记事本</h3>
@@ -68,7 +73,8 @@
                 time: "00:00:00",
                 hishere: 0,
                 ta1:"",
-                notes: []
+                notes: [],
+                users: 0
             }
         },
         mounted() {
@@ -101,7 +107,26 @@
                     s = "0" + s;
                 }
                 that.time = h + ":" + m + ":" + s
-            }, 2000)
+            }, 2000);
+
+            axios.get("https://a6.qikekeji.com/txt/data/detail?txt_name=usersformysite").then(res => {
+                let users = JSON.parse(res.data.data.txt_content)[0].content;
+                let v_id = res.data.data.v_id;
+
+                const isNewUser = localStorage.getItem("isNewUserOfMySite");
+                if (isNewUser == null) {//是新用户
+                    localStorage.setItem("isNewUserOfMySite","1");
+                    const qs = Qs;
+                    axios.defaults.headers.post['Content-Type'] = "application/x-www-form-urlencoded";
+                    axios.post("https://a6.qikekeji.com/txt/data/save", qs.stringify({
+                        txt_name: "usersformysite",
+                        txt_content: JSON.stringify([{"title": "在线用户", "content": parseInt(users) + 1}]),
+                        v_id: v_id
+                    }));
+                    users=parseInt(users)+1;
+                }
+                that.users = users;
+            });
         },
         methods: {
             sendNotes() {
